@@ -1,12 +1,13 @@
 import { create } from "@bufbuild/protobuf";
 import { timestampDate } from "@bufbuild/protobuf/wkt";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowUpIcon, CombineIcon, XIcon } from "lucide-react";
+import { ArrowUpIcon, ChevronDownIcon, CombineIcon, TrashIcon, XIcon } from "lucide-react";
 import { type ReactElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import { MentionResolutionProvider } from "@/components/MemoContent/MentionResolutionContext";
 import { deriveDefaultCreateTimeFromFilters } from "@/components/MemoEditor/utils/deriveDefaultCreateTime";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { userServiceClient } from "@/connect";
 import { useMemoFilterContext } from "@/contexts/MemoFilterContext";
 import { DEFAULT_LIST_MEMOS_PAGE_SIZE } from "@/helpers/consts";
@@ -107,7 +108,9 @@ const PagedMemoList = (props: Props) => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedMemoNames, setSelectedMemoNames] = useState<string[]>([]);
   const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isMerging, setIsMerging] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteMemos(
     {
@@ -203,6 +206,27 @@ const PagedMemoList = (props: Props) => {
     }
   }, [deleteMemo, selectedMemos, updateMemo]);
 
+  const handleDeleteSelectedMemos = useCallback(async () => {
+    if (selectedMemos.length === 0) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      for (const memo of selectedMemos) {
+        await deleteMemo(memo.name);
+      }
+      toast.success(`Deleted ${selectedMemos.length} memos`);
+      setSelectedMemoNames([]);
+      setSelectionMode(false);
+    } catch (error) {
+      console.error("Failed to delete selected memos", error);
+      toast.error("Failed to delete selected memos");
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [deleteMemo, selectedMemos]);
+
   // Prefetch creators when new data arrives to improve performance
   useEffect(() => {
     if (!data?.pages || !props.showCreator) return;
@@ -271,10 +295,24 @@ const PagedMemoList = (props: Props) => {
                     <XIcon className="mr-1 size-4" />
                     Cancel
                   </Button>
-                  <Button size="sm" disabled={selectedMemoNames.length < 2 || isMerging} onClick={() => setMergeDialogOpen(true)}>
-                    <CombineIcon className="mr-1 size-4" />
-                    Merge
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm" disabled={selectedMemoNames.length === 0 || isDeleting || isMerging}>
+                        <ChevronDownIcon className="mr-1 size-4" />
+                        Actions
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem disabled={selectedMemoNames.length < 2} onClick={() => setMergeDialogOpen(true)}>
+                        <CombineIcon className="w-4 h-auto" />
+                        Merge selected
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteDialogOpen(true)}>
+                        <TrashIcon className="w-4 h-auto" />
+                        Delete selected
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             )}
@@ -318,6 +356,18 @@ const PagedMemoList = (props: Props) => {
         confirmLabel="Merge"
         cancelLabel="Cancel"
         onConfirm={handleMergeSelectedMemos}
+      />
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete selected memos?"
+        description={`This will permanently delete ${selectedMemoNames.length} selected memo${
+          selectedMemoNames.length === 1 ? "" : "s"
+        } and their attachments.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={handleDeleteSelectedMemos}
+        confirmVariant="destructive"
       />
     </MentionResolutionProvider>
   );
