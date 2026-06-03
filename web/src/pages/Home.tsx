@@ -24,11 +24,14 @@ const Home = () => {
   return (
     <div className="w-full min-h-full bg-background text-foreground">
       <PagedMemoList
-        renderer={(memo: Memo) => <MemoView key={`${memo.name}-${memo.updateTime}`} memo={memo} showVisibility showPinned compact />}
+        renderer={(memo: Memo, selectionProps) => (
+          <MemoView key={`${memo.name}-${memo.updateTime}`} memo={memo} showVisibility showPinned compact {...selectionProps} />
+        )}
         listSort={listSort}
         orderBy={orderBy}
         filter={memoFilter}
         enabled={isInitialized}
+        enableSelection
         showMemoEditor
       />
     </div>

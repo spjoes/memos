@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useInstance } from "@/contexts/InstanceContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useUser } from "@/hooks/useUserQueries";
@@ -17,7 +18,19 @@ import { computeCommentAmount, MemoViewContext } from "./MemoViewContext";
 import type { MemoViewProps } from "./types";
 
 const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
-  const { memo: memoData, className, parentPage: parentPageProp, compact, showCreator, showVisibility, showPinned } = props;
+  const {
+    memo: memoData,
+    className,
+    parentPage: parentPageProp,
+    compact,
+    showCreator,
+    showVisibility,
+    showPinned,
+    selectionMode,
+    selected,
+    onSelectedChange,
+    onSelect,
+  } = props;
   const cardRef = useRef<HTMLDivElement>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [cardWidth, setCardWidth] = useState(0);
@@ -38,6 +51,7 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
 
   const openEditor = useCallback(() => setShowEditor(true), []);
   const closeEditor = useCallback(() => setShowEditor(false), []);
+  const handleSelectionChange = useCallback(() => onSelectedChange?.(!selected), [onSelectedChange, selected]);
 
   const location = useLocation();
   const isInMemoDetailPage = location.pathname.startsWith(`/${memoData.name}`) || location.pathname.startsWith("/memos/shares/");
@@ -82,6 +96,7 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
       showBlurredContent,
       blurred,
       openEditor,
+      onSelect,
       toggleBlurVisibility,
       openPreview,
     }),
@@ -96,6 +111,7 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
       showBlurredContent,
       blurred,
       openEditor,
+      onSelect,
       toggleBlurVisibility,
       openPreview,
     ],
@@ -117,11 +133,30 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
 
   const article = (
     <article
-      className={cn(MEMO_CARD_BASE_CLASSES, showCommentPreview ? "mb-0 rounded-b-none" : "mb-2", className)}
+      className={cn(
+        MEMO_CARD_BASE_CLASSES,
+        selectionMode && "relative border border-border transition-colors",
+        selectionMode && selected && "border-primary bg-primary/5",
+        showCommentPreview ? "mb-0 rounded-b-none" : "mb-2",
+        className,
+      )}
       ref={cardRef}
       tabIndex={readonly ? -1 : 0}
     >
-      <MemoHeader showCreator={showCreator} showVisibility={showVisibility} showPinned={showPinned} />
+      {selectionMode && (
+        <div className="absolute top-3 left-3 z-20">
+          <Checkbox
+            checked={selected}
+            aria-label={selected ? "Deselect memo" : "Select memo"}
+            className="size-5 bg-card"
+            onCheckedChange={handleSelectionChange}
+          />
+        </div>
+      )}
+
+      <div className={cn("w-full", selectionMode && "pl-7")}>
+        <MemoHeader showCreator={showCreator} showVisibility={showVisibility} showPinned={showPinned} />
+      </div>
 
       <MemoBody compact={compact} />
 

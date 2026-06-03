@@ -21,7 +21,7 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ showCreator, showVisibility, sh
   const t = useTranslate();
   const [reactionSelectorOpen, setReactionSelectorOpen] = useState(false);
 
-  const { memo, creator, currentUser, parentPage, isArchived, readonly, openEditor } = useMemoViewContext();
+  const { memo, creator, currentUser, parentPage, isArchived, readonly, openEditor, onSelect } = useMemoViewContext();
   const { createTime, updateTime, displayTime: memoDisplayTime, isDisplayingUpdatedTime, relativeTimeFormat } = useMemoViewDerived();
 
   const navigateTo = useNavigateTo();
@@ -95,7 +95,7 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ showCreator, showVisibility, sh
           </TooltipProvider>
         )}
 
-        <MemoActionMenu memo={memo} readonly={readonly} onEdit={openEditor} />
+        <MemoActionMenu memo={memo} readonly={readonly} onEdit={openEditor} onSelect={onSelect} />
       </div>
     </div>
   );

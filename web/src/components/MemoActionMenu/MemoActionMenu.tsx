@@ -4,6 +4,7 @@ import {
   BookmarkMinusIcon,
   BookmarkPlusIcon,
   CheckCheckIcon,
+  CheckSquareIcon,
   CopyIcon,
   Edit3Icon,
   FileTextIcon,
@@ -84,6 +85,12 @@ const MemoActionMenu = (props: MemoActionMenuProps) => {
               <Edit3Icon className="w-4 h-auto" />
               {t("common.edit")}
             </DropdownMenuItem>
+            {props.onSelect && (
+              <DropdownMenuItem onClick={props.onSelect}>
+                <CheckSquareIcon className="w-4 h-auto" />
+                Select
+              </DropdownMenuItem>
+            )}
           </>
         )}
 

@@ -6,6 +6,10 @@ export interface MemoViewProps {
   showCreator?: boolean;
   showVisibility?: boolean;
   showPinned?: boolean;
+  selectionMode?: boolean;
+  selected?: boolean;
+  onSelectedChange?: (selected: boolean) => void;
+  onSelect?: () => void;
   className?: string;
   parentPage?: string;
   shareImageDialogOpen?: boolean;

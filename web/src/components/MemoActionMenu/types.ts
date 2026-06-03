@@ -5,4 +5,5 @@ export interface MemoActionMenuProps {
   readonly?: boolean;
   className?: string;
   onEdit?: () => void;
+  onSelect?: () => void;
 }
